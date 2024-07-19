@@ -53,11 +53,8 @@ jobs:
         kubectl get endpoints server-service
         kubectl logs $(kubectl get pods -l app=server -o jsonpath='{.items[0].metadata.name}')
 
-    - name: Expose Service and Test
+    - name: Test Service
       run: |
-        # Expose the service using NodePort
-        kubectl expose deployment server-deployment --type=NodePort --name=server-service --port=80 --target-port=80
-        
         # Wait for service to be available
         sleep 10
         
