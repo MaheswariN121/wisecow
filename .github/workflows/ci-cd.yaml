@@ -1,10 +1,7 @@
-name: CI/CD Pipeline for Wisecow
+name: Deploy to Minikube
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
     branches:
       - main
 
@@ -42,29 +39,25 @@ jobs:
     - name: Minikube status
       run: minikube status
 
-    - name: Deploy to Minikube
+    - name: Apply Kubernetes manifests
       run: |
         kubectl apply -f k8s/deployment.yaml
         kubectl apply -f k8s/service.yaml
-        kubectl rollout status deployment/server-deployment
-        kubectl get pods
-        kubectl get services
-        kubectl describe service server-service
-        kubectl get endpoints server-service
-        kubectl logs $(kubectl get pods -l app=server -o jsonpath='{.items[0].metadata.name}')
 
-    - name: Test Service
+    - name: Expose and access the service
       run: |
-        # Wait for service to be available
-        sleep 10
-        
-        # Retrieve the Minikube IP and service URL
+        # Wait for the LoadBalancer service to get an external IP
+        sleep 30
+
+        # Get the Minikube IP
         MINIKUBE_IP=$(minikube ip)
-        NODE_PORT=$(kubectl get svc server-service -o=jsonpath='{.spec.ports[0].nodePort}')
-        
+
+        # Get the LoadBalancer service URL
+        SERVICE_URL=$(minikube service server-service --url)
+
         # Print the URL for debugging
-        echo "Service URL: http://${MINIKUBE_IP}:${NODE_PORT}"
-        
-        # Test the service
-        curl -v http://${MINIKUBE_IP}:${NODE_PORT}
+        echo "Service URL: ${SERVICE_URL}"
+
+        # Access the service
+        curl -v ${SERVICE_URL}
 
