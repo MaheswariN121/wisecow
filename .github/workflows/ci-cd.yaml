@@ -42,16 +42,21 @@ jobs:
     - name: Minikube status
       run: minikube status
 
+    - name: Check kubectl context
+      run: kubectl config current-context
+
     - name: Deploy to Minikube
       run: |
         kubectl apply -f k8s/deployment.yaml
         kubectl apply -f k8s/service.yaml
-        kubectl wait --for=condition=ready pod -l app=server
+        kubectl rollout status deployment/server-deployment
+        kubectl get pods
+        kubectl get services
 
     - name: Test service URLs
       run: |
         minikube service list
-        minikube service your-service-name --url
+        minikube service server-service --url
         echo "------------------opening the service------------------"
-        curl $(minikube service your-service-name --url)
+        curl $(minikube service server-service --url)
 
