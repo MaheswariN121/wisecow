@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          
+        
 
       - name: Build Docker image
         run: |
@@ -48,6 +48,7 @@ jobs:
         with:
           minikube version: 'latest'
           kubectl version: 'latest'
+          kubernetes version: 'latest'
 
       - name: Start Minikube
         run: |
