@@ -33,12 +33,35 @@ jobs:
         push: true
         tags: mahijoe/server:latest
 
-    - name: Set up Minikube
-      uses: manusa/actions-setup-minikube@v2.4.0
-      with:
-        minikube version: 'v1.24.0'  # specify a version to avoid the 404 error
-        kubernetes version: 'v1.21.0'  # specify the Kubernetes version
-        driver: docker
+    - name: Set up Kubernetes and Minikube
+      env:
+        MINIKUBE_VERSION: v1.29.0
+        KUBERNETES_VERSION: v1.24.0
+      run: |
+        # Install Docker
+        sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+        sudo apt-get update && sudo apt-get install -y docker-ce
+
+        # Install Kubectl
+        curl -LO "https://dl.k8s.io/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/
+
+        # Install Minikube
+        curl -LO https://storage.googleapis.com/minikube/releases/$MINIKUBE_VERSION/minikube-linux-amd64
+        sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+        # Start Minikube
+        sudo minikube start --vm-driver=none
+
+        # Fix permissions
+        sudo chown -R $USER $HOME/.kube $HOME/.minikube
+        sudo chgrp -R $USER $HOME/.kube $HOME/.minikube
+
+        # Wait for Minikube to be ready
+        while ! minikube status; do sleep 5; done
 
     - name: Minikube status
       run: minikube status
@@ -47,4 +70,5 @@ jobs:
       run: |
         kubectl apply -f k8s/deployment.yaml
         kubectl apply -f k8s/service.yaml
+
 
