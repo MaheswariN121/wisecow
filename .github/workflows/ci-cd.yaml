@@ -47,6 +47,16 @@ jobs:
         # Install conntrack
         sudo apt-get install -y conntrack
 
+        # Install cri-dockerd
+        sudo apt-get install -y golang-go git
+        git clone https://github.com/Mirantis/cri-dockerd.git
+        cd cri-dockerd
+        mkdir bin
+        go get && go build -o bin/cri-dockerd
+        sudo mv bin/cri-dockerd /usr/local/bin/
+        cd ..
+        sudo rm -rf cri-dockerd
+
         # Install Kubectl
         curl -LO "https://dl.k8s.io/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl"
         chmod +x kubectl
@@ -57,7 +67,7 @@ jobs:
         sudo install minikube-linux-amd64 /usr/local/bin/minikube
 
         # Start Minikube
-        sudo minikube start --vm-driver=none
+        sudo minikube start --vm-driver=none --container-runtime=docker
 
         # Fix permissions
         sudo chown -R $USER $HOME/.kube $HOME/.minikube
@@ -73,4 +83,5 @@ jobs:
       run: |
         kubectl apply -f k8s/deployment.yaml
         kubectl apply -f k8s/service.yaml
+
 
