@@ -1,16 +1,14 @@
-name: CI/CD Pipeline for Wisecow
+name: CI
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
 
 jobs:
-  setup:
+  deploy:
     runs-on: ubuntu-latest
+    name: Build and deploy to Minikube
 
     steps:
     - name: Checkout repository
@@ -24,14 +22,6 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        file: ./Dockerfile
-        push: true
-        tags: mahijoe/server:latest
 
     - name: Set up Kubernetes and Minikube
       env:
@@ -79,9 +69,21 @@ jobs:
     - name: Minikube status
       run: minikube status
 
+    - name: Build Docker image
+      run: |
+        minikube image build -t mahijoe/server:latest .
+
     - name: Deploy to Minikube
       run: |
         kubectl apply -f k8s/deployment.yaml
         kubectl apply -f k8s/service.yaml
+        kubectl wait --for=condition=ready pod -l app=your-app-label
+
+    - name: Test service URLs
+      run: |
+        minikube service list
+        minikube service your-service-name --url
+        echo "------------------opening the service------------------"
+        curl $(minikube service your-service-name --url)
 
 
