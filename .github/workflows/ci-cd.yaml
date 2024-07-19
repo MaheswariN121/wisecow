@@ -1,65 +1,50 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline for Wisecow
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build:
-    runs-on: ubuntu-20.04
+  setup:
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
 
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-        
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Docker image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/wisecow:latest .
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: mahijoe/server:latest
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Set up Minikube
+      uses: manusa/actions-setup-minikube@v2.4.0
+      with:
+        minikube version: 'v1.24.0'  # specify a version to avoid the 404 error
+        kubernetes version: 'v1.21.0'  # specify the Kubernetes version
+        driver: docker
 
-      - name: Push Docker image
-        run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/wisecow:latest
+    - name: Minikube status
+      run: minikube status
 
-  deploy:
-    runs-on: ubuntu-20.04
-    needs: build
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Minikube
-        uses: manusa/actions-setup-minikube@v2.4.0
-        with:
-          minikube version: 'latest'
-          kubectl version: 'latest'
-          kubernetes version: 'latest'
-
-      - name: Start Minikube
-        run: |
-          minikube start
-
-      - name: Set up kubectl
-        run: |
-          kubectl config use-context minikube
-
-      - name: Deploy to Kubernetes
-        run: |
-          kubectl apply -f k8s/deployment.yaml
-          kubectl apply -f k8s/service.yaml
+    - name: Deploy to Minikube
+      run: |
+        kubectl apply -f k8s/deployment.yaml
+        kubectl apply -f k8s/service.yaml
 
