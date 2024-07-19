@@ -42,9 +42,6 @@ jobs:
     - name: Minikube status
       run: minikube status
 
-    - name: Check kubectl context
-      run: kubectl config current-context
-
     - name: Deploy to Minikube
       run: |
         kubectl apply -f k8s/deployment.yaml
@@ -53,12 +50,24 @@ jobs:
         kubectl get pods
         kubectl get services
         kubectl describe service server-service
+        kubectl get endpoints server-service
         kubectl logs $(kubectl get pods -l app=server -o jsonpath='{.items[0].metadata.name}')
 
-    - name: Test service URLs
+    - name: Expose Service and Test
       run: |
-        minikube service list
-        minikube service server-service --url
-        echo "------------------opening the service------------------"
-        curl $(minikube service server-service --url)
+        # Expose the service using NodePort
+        kubectl expose deployment server-deployment --type=NodePort --name=server-service --port=80 --target-port=80
+        
+        # Wait for service to be available
+        sleep 10
+        
+        # Retrieve the Minikube IP and service URL
+        MINIKUBE_IP=$(minikube ip)
+        NODE_PORT=$(kubectl get svc server-service -o=jsonpath='{.spec.ports[0].nodePort}')
+        
+        # Print the URL for debugging
+        echo "Service URL: http://${MINIKUBE_IP}:${NODE_PORT}"
+        
+        # Test the service
+        curl -v http://${MINIKUBE_IP}:${NODE_PORT}
 
