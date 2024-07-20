@@ -16,5 +16,5 @@ spec:
       - name: server
         image: mahijoe/server:latest
         ports:
-        - containerPort: 8080
+        - containerPort: 4499
 
