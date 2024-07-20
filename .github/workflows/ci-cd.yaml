@@ -62,11 +62,6 @@ jobs:
       - name: Construct the service URL
         run: |
           SERVICE_URL="http://${{ env.MINIKUBE_IP }}:${{ env.NODE_PORT }}"
-          echo "SERVICE_URL=${SERVICE_URL}" >> $GITHUB_ENV
+          echo "SERVICE_URL=${SERVICE_URL}"
 
-      - name: Access the service (optional)
-        run: curl -v ${{ env.SERVICE_URL }}
-
-        #- name: Run integration tests (optional)
-        #run: echo "Add your integration test commands here"
 
