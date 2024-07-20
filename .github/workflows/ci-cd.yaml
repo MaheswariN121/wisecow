@@ -48,6 +48,9 @@ jobs:
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
 
+      - name: Wait for pods to be created
+        run: sleep 30  # Adjust the sleep duration if necessary
+
       - name: Wait for pods to be ready
         run: kubectl wait --for=condition=Ready pod -l app=server
 
@@ -63,5 +66,4 @@ jobs:
         run: |
           SERVICE_URL="http://${{ env.MINIKUBE_IP }}:${{ env.NODE_PORT }}"
           echo "SERVICE_URL=${SERVICE_URL}"
-
 
