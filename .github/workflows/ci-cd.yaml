@@ -44,7 +44,7 @@ jobs:
         run: minikube status
 
       - name: Apply Kubernetes manifests
-        run: |
+        run: |  
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
 
@@ -53,9 +53,10 @@ jobs:
 
       - name: Port-forward service
         run: |
-          kubectl port-forward svc/server-service 8080:8080 &
+          kubectl port-forward svc/server-service 8080:4499 &
           sleep 10  # Give it a few seconds to set up
 
-      - name: Access the service
+      - name: Check service availability
         run: curl -v http://localhost:8080
+
 
