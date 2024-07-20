@@ -8,10 +8,12 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  job1:
     runs-on: ubuntu-latest
+    name: Build and deploy to Minikube
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
@@ -46,19 +48,17 @@ jobs:
 
     - name: Expose and access the service
       run: |
-        # Wait for the service to get a NodePort
+        # Wait for the NodePort service to be ready
         sleep 30
 
         # Get the Minikube IP
         MINIKUBE_IP=$(minikube ip)
 
-        # Get the NodePort for the service
+        # Get the NodePort service port
         NODE_PORT=$(kubectl get svc server-service -o=jsonpath='{.spec.ports[0].nodePort}')
 
-        # Construct the service URL
-        SERVICE_URL=http://${MINIKUBE_IP}:${NODE_PORT}
-
         # Print the URL for debugging
+        SERVICE_URL="http://${MINIKUBE_IP}:${NODE_PORT}"
         echo "Service URL: ${SERVICE_URL}"
 
         # Access the service
