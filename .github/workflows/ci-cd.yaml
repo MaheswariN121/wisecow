@@ -48,22 +48,14 @@ jobs:
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
 
-      - name: Wait for pods to be created
-        run: sleep 30  # Adjust the sleep duration if necessary
-
       - name: Wait for pods to be ready
         run: kubectl wait --for=condition=Ready pod -l app=server
 
-      - name: Get the Minikube IP
-        run: echo "MINIKUBE_IP=$(minikube ip)" >> $GITHUB_ENV
-
-      - name: Get the NodePort service port
+      - name: Port-forward service
         run: |
-          NODE_PORT=$(kubectl get svc server-service -o=jsonpath='{.spec.ports[0].nodePort}')
-          echo "NODE_PORT=${NODE_PORT}" >> $GITHUB_ENV
+          kubectl port-forward svc/server-service 8080:8080 &
+          sleep 10  # Give it a few seconds to set up
 
-      - name: Construct the service URL
-        run: |
-          SERVICE_URL="http://${{ env.MINIKUBE_IP }}:${{ env.NODE_PORT }}"
-          echo "SERVICE_URL=${SERVICE_URL}"
+      - name: Access the service
+        run: curl -v http://localhost:8080
 
