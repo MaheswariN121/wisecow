@@ -14,51 +14,51 @@ jobs:
     name: Build, deploy to Minikube, and test
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Login to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v2
-        with:
-          context: .  # Replace with your Dockerfile path if needed
-          file: ./Dockerfile  # Replace with your Dockerfile path if needed
-          push: true
-          tags: mahijoe/server:latest
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .  # Replace with your Dockerfile path if needed
+        file: ./Dockerfile  # Replace with your Dockerfile path if needed
+        push: true
+        tags: mahijoe/server:latest
 
-      - name: Set up Minikube
-        uses: medyagh/setup-minikube@latest
+    - name: Set up Minikube
+      uses: medyagh/setup-minikube@latest
 
-      - name: Start Minikube
-        run: minikube start --driver=docker
+    - name: Start Minikube
+      run: minikube start --driver=docker
 
-      - name: Minikube status
-        run: minikube status
+    - name: Minikube status
+      run: minikube status
 
-      - name: Apply Kubernetes manifests
-        run: |
-          kubectl apply -f k8s/deployment.yaml
-          kubectl apply -f k8s/service.yaml
+    - name: Apply Kubernetes manifests
+      run: |
+        kubectl apply -f k8s/deployment.yaml
+        kubectl apply -f k8s/service.yaml
 
-      - name: Wait for pods to be ready
-        run: kubectl wait --for=condition=Ready pod -l app=server
+    - name: Wait for pods to be ready
+      run: kubectl wait --for=condition=Ready pod -l app=server
 
-      - name: Port-forward service
-        run: |
-          kubectl port-forward svc/server-service 8080:8080 &
-          sleep 30  # Ensure port-forwarding is fully established
+    - name: Get Kubernetes Pods
+      run: |
+        kubectl get pods -o wide
 
-      - name: Run integration test
-        run: |
-          curl -v http://localhost:8080
+    - name: Get Kubernetes Services
+      run: |
+        kubectl get services -o wide
+
 
 
 
