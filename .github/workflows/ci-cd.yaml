@@ -29,8 +29,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
-          context: .
-          file: ./Dockerfile
+          context: .  # Replace with your Dockerfile path if needed
+          file: ./Dockerfile  # Replace with your Dockerfile path if needed
           push: true
           tags: mahijoe/server:latest
 
@@ -67,8 +67,6 @@ jobs:
       - name: Access the service (optional)
         run: curl -v ${{ env.SERVICE_URL }}
 
-      - name: Run integration tests (optional)
-        # Add your integration test commands here
-        # This step can be used to test the deployed ClickHouse instance
-
+        #- name: Run integration tests (optional)
+        #run: echo "Add your integration test commands here"
 
